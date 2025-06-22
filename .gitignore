@@ -50,3 +50,6 @@ web/src/docs
 
 # Compilation databases; easy to generate
 compile_commands.json
+
+# Directory that should be used for asan output
+asan_logs/
