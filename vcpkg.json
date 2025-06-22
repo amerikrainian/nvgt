@@ -1,7 +1,7 @@
 {
   "name": "nvgt",
   "version": "1.0.0",
-  "builtin-baseline": "f2bf7d935af722c0cd8219c1f6e30d5ae3d666f2",
+  "builtin-baseline": "4fc5d0252289d5dc22a422beff86344a6cb52414",
   "dependencies": [
     {
       "name": "enet6",
@@ -9,11 +9,18 @@
     },
     {
       "name": "libflac",
-      "features": ["stack-protector"]
+      "features": [
+        "stack-protector"
+      ]
     },
     {
       "name": "curl",
-      "features": ["http2", "openssl", "ssl", "non-http"]
+      "features": [
+        "http2",
+        "openssl",
+        "ssl",
+        "non-http"
+      ]
     },
     "libffi",
     {
@@ -27,12 +34,25 @@
     },
     {
       "name": "sdl3",
-      "features": ["ibus", "x11", "wayland", "vulkan"],
+      "features": [
+        "vulkan"
+      ],
       "default-features": true
     },
     {
+      "name": "sdl3",
+      "features": [
+        "ibus",
+        "x11",
+        "wayland"
+      ],
+      "platform": "linux"
+    },
+    {
       "name": "sdl3-ttf",
-      "features": ["svg"],
+      "features": [
+        "svg"
+      ],
       "default-features": true
     },
     {
@@ -45,22 +65,54 @@
     },
     {
       "name": "libarchive",
-      "features": ["bzip2", "crypto", "libxml2", "lz4", "lzma", "zstd"]
+      "features": [
+        "bzip2",
+        "crypto",
+        "libxml2",
+        "lz4",
+        "lzma",
+        "zstd"
+      ]
     },
     {
       "name": "poco",
-      "features": ["crypto", "net", "netssl", "json", "util", "xml", "zip", "encodings", "mongodb", "redis", "jwt", "prometheus", "sevenzip"]
+      "features": [
+        "crypto",
+        "net",
+        "netssl",
+        "json",
+        "util",
+        "xml",
+        "zip",
+        "encodings",
+        "mongodb",
+        "redis",
+        "jwt",
+        "prometheus",
+        "sevenzip"
+      ]
     },
     {
       "name": "freetype",
-      "features": ["brotli", "bzip2", "error-strings", "png", "subpixel-rendering", "zlib"]
+      "features": [
+        "brotli",
+        "bzip2",
+        "error-strings",
+        "png",
+        "subpixel-rendering",
+        "zlib"
+      ]
     },
     "flatbuffers",
     "steam-audio",
     "angelscript",
     {
       "name": "libgit2",
-      "features": ["openssl", "pcre", "ssl"]
+      "features": [
+        "openssl",
+        "pcre",
+        "ssl"
+      ]
     },
     "libplist",
     "reactphysics3d",
@@ -70,7 +122,7 @@
   ],
   "overrides": [
     {
-      "name": "flatbuffers", 
+      "name": "flatbuffers",
       "version": "23.5.26"
     }
   ]

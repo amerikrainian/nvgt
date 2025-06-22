@@ -10,7 +10,7 @@ from pathlib import Path
 from subprocess import CalledProcessError, run
 
 import requests
-from github import Github
+# from github import Github
 
 if (
     platform.system() == "Linux"
@@ -195,38 +195,38 @@ def build_packages_for_android() -> None:
         out_dir / "debug",
         dirs_exist_ok=True,
     )
-    if use_official_steam_audio:
-        gh = Github()
-        repo = gh.get_repo("ValveSoftware/steam-audio")
-        release = repo.get_latest_release()
-        zip_asset = None
-        # TODO (ethindp): refine this
-        for asset in release.get_assets():
-            if asset.name.startswith("steamaudio_") and asset.name.endswith(".zip"):
-                zip_asset = asset
-                break
-        if zip_asset is None:
-            sys.exit("Official steam audio zip asset could not be found")
-        response = requests.get(zip_asset.browser_download_url, timeout=30)
-        response.raise_for_status()
-        zip_data = io.BytesIO(response.content)
-        with zipfile.ZipFile(zip_data) as zf:
-            zf.extract(
-                "steamaudio/lib/android-armv8/libphonon.so",
-                path=str((out_dir / "lib").resolve()),
-            )
-            zf.extract(
-                "steamaudio/include/phonon.h",
-                path=str((out_dir / "include").resolve()),
-            )
-            zf.extract(
-                "steamaudio/include/phonon_interfaces.h",
-                path=str((out_dir / "include").resolve()),
-            )
-            zf.extract(
-                "steamaudio/include/phonon_version.h",
-                path=str((out_dir / "include").resolve()),
-            )
+    # if use_official_steam_audio:
+    #     gh = Github()
+    #     repo = gh.get_repo("ValveSoftware/steam-audio")
+    #     release = repo.get_latest_release()
+    #     zip_asset = None
+    #     # TODO (ethindp): refine this
+    #     for asset in release.get_assets():
+    #         if asset.name.startswith("steamaudio_") and asset.name.endswith(".zip"):
+    #             zip_asset = asset
+    #             break
+    #     if zip_asset is None:
+    #         sys.exit("Official steam audio zip asset could not be found")
+    #     response = requests.get(zip_asset.browser_download_url, timeout=30)
+    #     response.raise_for_status()
+    #     zip_data = io.BytesIO(response.content)
+    #     with zipfile.ZipFile(zip_data) as zf:
+    #         zf.extract(
+    #             "steamaudio/lib/android-armv8/libphonon.so",
+    #             path=str((out_dir / "lib").resolve()),
+    #         )
+    #         zf.extract(
+    #             "steamaudio/include/phonon.h",
+    #             path=str((out_dir / "include").resolve()),
+    #         )
+    #         zf.extract(
+    #             "steamaudio/include/phonon_interfaces.h",
+    #             path=str((out_dir / "include").resolve()),
+    #         )
+    #         zf.extract(
+    #             "steamaudio/include/phonon_version.h",
+    #             path=str((out_dir / "include").resolve()),
+    #         )
     shutil.make_archive("droiddev", format="zip", root_dir=out_dir, base_dir="droiddev")
     with (
         Path("droiddev.zip").open("rb") as f,
@@ -462,40 +462,40 @@ def build_packages_for_linux() -> None:
                     out_dir / "debug",
                     dirs_exist_ok=True,
                 )
-        if use_official_steam_audio:
-            gh = Github()
-            repo = gh.get_repo("ValveSoftware/steam-audio")
-            release = repo.get_latest_release()
-            zip_asset = None
-            # TODO (ethindp): refine this
-            for asset in release.get_assets():
-                if asset.name.startswith("steamaudio_") and asset.name.endswith(".zip"):
-                    zip_asset = asset
-                    break
-            if zip_asset is None:
-                sys.exit("Official steam audio zip asset could not be found")
-            response = requests.get(zip_asset.browser_download_url, timeout=30)
-            response.raise_for_status()
-            zip_data = io.BytesIO(response.content)
-            with zipfile.ZipFile(zip_data) as zf:
-                if build_x64_linux:
-                    out_dir = Path(orig_cwd / "build" / "packages" / "lindev-x64")
-                    zf.extract(
-                        "steamaudio/lib/linux-x64/libphonon.so",
-                        path=str((out_dir / "lib").resolve()),
-                    )
-                    zf.extract(
-                        "steamaudio/include/phonon.h",
-                        path=str((out_dir / "include").resolve()),
-                    )
-                    zf.extract(
-                        "steamaudio/include/phonon_interfaces.h",
-                        path=str((out_dir / "include").resolve()),
-                    )
-                    zf.extract(
-                        "steamaudio/include/phonon_version.h",
-                        path=str((out_dir / "include").resolve()),
-                    )
+        # if use_official_steam_audio:
+        #     gh = Github()
+        #     repo = gh.get_repo("ValveSoftware/steam-audio")
+        #     release = repo.get_latest_release()
+        #     zip_asset = None
+        #     # TODO (ethindp): refine this
+        #     for asset in release.get_assets():
+        #         if asset.name.startswith("steamaudio_") and asset.name.endswith(".zip"):
+        #             zip_asset = asset
+        #             break
+        #     if zip_asset is None:
+        #         sys.exit("Official steam audio zip asset could not be found")
+        #     response = requests.get(zip_asset.browser_download_url, timeout=30)
+        #     response.raise_for_status()
+        #     zip_data = io.BytesIO(response.content)
+        #     with zipfile.ZipFile(zip_data) as zf:
+        #         if build_x64_linux:
+        #             out_dir = Path(orig_cwd / "build" / "packages" / "lindev-x64")
+        #             zf.extract(
+        #                 "steamaudio/lib/linux-x64/libphonon.so",
+        #                 path=str((out_dir / "lib").resolve()),
+        #             )
+        #             zf.extract(
+        #                 "steamaudio/include/phonon.h",
+        #                 path=str((out_dir / "include").resolve()),
+        #             )
+        #             zf.extract(
+        #                 "steamaudio/include/phonon_interfaces.h",
+        #                 path=str((out_dir / "include").resolve()),
+        #             )
+        #             zf.extract(
+        #                 "steamaudio/include/phonon_version.h",
+        #                 path=str((out_dir / "include").resolve()),
+        #             )
     if build_arm64_linux:
         out_dir = Path(orig_cwd / "build" / "packages" / "lindev-arm64")
         shutil.make_archive(
@@ -731,44 +731,44 @@ def build_packages_for_windows() -> None:
                     dirs_exist_ok=True,
                 )
 
-        if use_official_steam_audio:
-            gh = Github()
-            repo = gh.get_repo("ValveSoftware/steam-audio")
-            release = repo.get_latest_release()
-            zip_asset = None
-            # TODO (ethindp): refine this
-            for asset in release.get_assets():
-                if asset.name.startswith("steamaudio_") and asset.name.endswith(".zip"):
-                    zip_asset = asset
-                    break
-            if zip_asset is None:
-                sys.exit("Official steam audio zip asset could not be found")
-            response = requests.get(zip_asset.browser_download_url, timeout=30)
-            response.raise_for_status()
-            zip_data = io.BytesIO(response.content)
-            with zipfile.ZipFile(zip_data) as zf:
-                if build_x64_windows:
-                    out_dir = Path(orig_cwd / "build" / "packages" / "windev-x64")
-                    zf.extract(
-                        "steamaudio/lib/windows-x64/phonon.dll",
-                        path=str((out_dir / "bin").resolve()),
-                    )
-                    zf.extract(
-                        "steamaudio/lib/windows-x64/phonon.lib",
-                        path=str((out_dir / "lib").resolve()),
-                    )
-                    zf.extract(
-                        "steamaudio/include/phonon.h",
-                        path=str((out_dir / "include").resolve()),
-                    )
-                    zf.extract(
-                        "steamaudio/include/phonon_interfaces.h",
-                        path=str((out_dir / "include").resolve()),
-                    )
-                    zf.extract(
-                        "steamaudio/include/phonon_version.h",
-                        path=str((out_dir / "include").resolve()),
-                    )
+        # if use_official_steam_audio:
+        #     gh = Github()
+        #     repo = gh.get_repo("ValveSoftware/steam-audio")
+        #     release = repo.get_latest_release()
+        #     zip_asset = None
+        #     # TODO (ethindp): refine this
+        #     for asset in release.get_assets():
+        #         if asset.name.startswith("steamaudio_") and asset.name.endswith(".zip"):
+        #             zip_asset = asset
+        #             break
+        #     if zip_asset is None:
+        #         sys.exit("Official steam audio zip asset could not be found")
+        #     response = requests.get(zip_asset.browser_download_url, timeout=30)
+        #     response.raise_for_status()
+        #     zip_data = io.BytesIO(response.content)
+        #     with zipfile.ZipFile(zip_data) as zf:
+        #         if build_x64_windows:
+        #             out_dir = Path(orig_cwd / "build" / "packages" / "windev-x64")
+        #             zf.extract(
+        #                 "steamaudio/lib/windows-x64/phonon.dll",
+        #                 path=str((out_dir / "bin").resolve()),
+        #             )
+        #             zf.extract(
+        #                 "steamaudio/lib/windows-x64/phonon.lib",
+        #                 path=str((out_dir / "lib").resolve()),
+        #             )
+        #             zf.extract(
+        #                 "steamaudio/include/phonon.h",
+        #                 path=str((out_dir / "include").resolve()),
+        #             )
+        #             zf.extract(
+        #                 "steamaudio/include/phonon_interfaces.h",
+        #                 path=str((out_dir / "include").resolve()),
+        #             )
+        #             zf.extract(
+        #                 "steamaudio/include/phonon_version.h",
+        #                 path=str((out_dir / "include").resolve()),
+        #             )
 
     if build_arm64_windows:
         out_dir = Path(orig_cwd / "build" / "packages" / "windev-arm64")
