@@ -30,8 +30,9 @@ if(VCPKG_TARGET_IS_WINDOWS)
   set(WINDOWS_STATIC_RUNTIME "-DSTEAMAUDIO_STATIC_RUNTIME=${STATIC_CRT}")
 endif()
 
-# We need to find flatc for steam-audio
-find_program(FlatBuffers_EXECUTABLE NAMES flatc PATHS "${CURRENT_HOST_INSTALLED_DIR}/tools/flatbuffers" NO_DEFAULT_PATHS)
+# Force use of system flatc to avoid version mismatch
+# Steam-audio expects flatc version 23.x but vcpkg has 25.x
+set(FlatBuffers_EXECUTABLE "/usr/bin/flatc")
 
 vcpkg_cmake_configure(
     SOURCE_PATH "${SOURCE_PATH}/core"

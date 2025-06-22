@@ -51,9 +51,20 @@ if env["PLATFORM"] == "darwin":
 	# homebrew paths and other libraries/flags for MacOS
 	env.Append(CCFLAGS = ["-mmacosx-version-min=14.0", "-arch", "arm64", "-arch", "x86_64"], LINKFLAGS = ["-arch", "arm64", "-arch", "x86_64"])
 elif env["PLATFORM"] == "posix":
-	# enable the gold linker, strip the resulting binaries, and add /usr/local/lib to the libpath because it seems we aren't finding libraries unless we do manually.
-	env.Append(CPPPATH = ["lindev/include", "/usr/local/include"], LIBPATH = ["lindev/lib", "/usr/local/lib", "/usr/lib/x86_64-linux-gnu"], LINKFLAGS = ["-fuse-ld=gold", "-g" if ARGUMENTS.get("debug", 0) == "1" else "-s"])
-env.Append(CPPDEFINES = ["POCO_STATIC", "UNIVERSAL_SPEECH_STATIC", "DEBUG" if ARGUMENTS.get("debug", "0") == "1" else "NDEBUG", "UNICODE"])
+	# Use vcpkg libraries if available, otherwise fall back to lindev
+	vcpkg_installed = os.path.exists("vcpkg_installed/x64-linux")
+	is_debug = ARGUMENTS.get("debug", "0") == "1"
+	if vcpkg_installed:
+		print("Using vcpkg libraries from vcpkg_installed/x64-linux")
+		if is_debug:
+			env.Append(CPPPATH = ["vcpkg_installed/x64-linux/include", "/usr/local/include"], LIBPATH = ["vcpkg_installed/x64-linux/debug/lib", "vcpkg_installed/x64-linux-dynamic/debug/lib", "/usr/local/lib", "/usr/lib/x86_64-linux-gnu"])
+		else:
+			env.Append(CPPPATH = ["vcpkg_installed/x64-linux/include", "/usr/local/include"], LIBPATH = ["vcpkg_installed/x64-linux/lib", "vcpkg_installed/x64-linux-dynamic/lib", "/usr/local/lib", "/usr/lib/x86_64-linux-gnu"])
+	else:
+		print("Using prebuilt libraries from lindev/")
+		env.Append(CPPPATH = ["lindev/include", "/usr/local/include"], LIBPATH = ["lindev/lib", "/usr/local/lib", "/usr/lib/x86_64-linux-gnu"])
+	env.Append(LINKFLAGS = ["-fuse-ld=gold", "-g" if is_debug else "-s"])
+env.Append(CPPDEFINES = ["POCO_STATIC", "UNIVERSAL_SPEECH_STATIC", "DEBUG" if ARGUMENTS.get("debug", "0") == "1" else "NDEBUG", "UNICODE", "SDL_STATIC_LIB" if env["PLATFORM"] == "posix" else ""])
 env.Append(CPPPATH = ["#ASAddon/include", "#dep"], LIBPATH = ["#build/lib"])
 
 # plugins
@@ -85,7 +96,11 @@ if len(static_plugins) > 0:
 		static_plugins_object = env.Object(static_plugins_path, static_plugins_path + ".cpp", CPPPATH = env["CPPPATH"] + ["#src"])
 
 # Project libraries
-env.Append(LIBS = [["PocoJSON", "PocoNet", "PocoNetSSL", "PocoUtil", "PocoXML", "PocoCrypto", "PocoZip", "PocoFoundation", "expat", "z"] if env["PLATFORM"] != "win32" else ["UniversalSpeechStatic", "PocoXMLmt", "libexpatMT", "zlib"], "angelscript", "SDL3", "phonon", "enet", "reactphysics3d", "ssl", "crypto", "utf8proc", "pcre2-8", "ASAddon", "deps", "vorbisfile", "vorbis", "ogg"])
+if env["PLATFORM"] == "posix" and os.path.exists("vcpkg_installed/x64-linux"):
+	# When using vcpkg, we need to specify libraries in the correct order to resolve dependencies
+	env.Append(LIBS = ["ASAddon", "deps", "angelscript", "SDL3-static" if os.path.exists("vcpkg_installed/x64-linux/lib/libSDL3-static.a") else "SDL3", "phonon", "enet", "reactphysics3d", "PocoJSON", "PocoNet", "PocoNetSSL", "PocoUtil", "PocoXML", "PocoCrypto", "PocoZip", "PocoFoundation", "ssl", "crypto", "utf8proc", "pcre2-8", "vorbisfile", "vorbis", "ogg", "FLAC", "expat", "z", "mysofa", "pffft", "flatbuffers"])
+else:
+	env.Append(LIBS = [["PocoJSON", "PocoNet", "PocoNetSSL", "PocoUtil", "PocoXML", "PocoCrypto", "PocoZip", "PocoFoundation", "expat", "z"] if env["PLATFORM"] != "win32" else ["UniversalSpeechStatic", "PocoXMLmt", "libexpatMT", "zlib"], "angelscript", "SDL3", "phonon", "enet", "reactphysics3d", "ssl", "crypto", "utf8proc", "pcre2-8", "ASAddon", "deps", "vorbisfile", "vorbis", "ogg"])
 if env["PLATFORM"] == "posix": env.ParseConfig("pkg-config --libs alsa")
 
 # nvgt itself
@@ -119,8 +134,17 @@ SConscript("ASAddon/_SConscript", variant_dir = "build/obj_ASAddon", duplicate =
 SConscript("dep/_SConscript", variant_dir = "build/obj_dep", duplicate = 0, exports = "env")
 # We'll clone the environment for stubs now so that we can then add any extra libraries that are not needed for stubs to the main nvgt environment.
 stub_env = env.Clone(PROGSUFFIX = ".bin")
-if env["PLATFORM"] == "win32": env.Append(LINKFLAGS = ["/delayload:plist.dll"])
-env.Append(LIBS = ["plist-2.0" if env["PLATFORM"] != "win32" else "plist"])
+if env["PLATFORM"] == "win32":
+	env.Append(LINKFLAGS = ["/delayload:plist.dll"])
+	env.Append(LIBS = ["plist"])
+elif env["PLATFORM"] == "posix":
+	# For vcpkg builds on Linux, plist is named differently
+	if os.path.exists("vcpkg_installed/x64-linux/lib/libplist-2.0.a"):
+		env.Append(LIBS = ["plist-2.0", "plist++-2.0"])
+	else:
+		env.Append(LIBS = ["plist-2.0"])
+else:
+	env.Append(LIBS = ["plist-2.0"])
 extra_objects = [version_object]
 if static_plugins_object: extra_objects.append(static_plugins_object)
 nvgt = env.Program("release/nvgt", env.Object([os.path.join("build/obj_src", s) for s in sources]) + extra_objects, PDB = "#build/debug/nvgt.pdb")

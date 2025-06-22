@@ -1,0 +1,77 @@
+{
+  "name": "nvgt",
+  "version": "1.0.0",
+  "builtin-baseline": "f2bf7d935af722c0cd8219c1f6e30d5ae3d666f2",
+  "dependencies": [
+    {
+      "name": "enet6",
+      "default-features": true
+    },
+    {
+      "name": "libflac",
+      "features": ["stack-protector"]
+    },
+    {
+      "name": "curl",
+      "features": ["http2", "openssl", "ssl", "non-http"]
+    },
+    "libffi",
+    {
+      "name": "miniupnpc",
+      "default-features": true
+    },
+    "libogg",
+    {
+      "name": "opus",
+      "default-features": true
+    },
+    {
+      "name": "sdl3",
+      "features": ["ibus", "x11", "wayland", "vulkan"],
+      "default-features": true
+    },
+    {
+      "name": "sdl3-ttf",
+      "features": ["svg"],
+      "default-features": true
+    },
+    {
+      "name": "sdl3-image",
+      "default-features": true
+    },
+    {
+      "name": "libvorbis",
+      "default-features": true
+    },
+    {
+      "name": "libarchive",
+      "features": ["bzip2", "crypto", "libxml2", "lz4", "lzma", "zstd"]
+    },
+    {
+      "name": "poco",
+      "features": ["crypto", "net", "netssl", "json", "util", "xml", "zip", "encodings", "mongodb", "redis", "jwt", "prometheus", "sevenzip"]
+    },
+    {
+      "name": "freetype",
+      "features": ["brotli", "bzip2", "error-strings", "png", "subpixel-rendering", "zlib"]
+    },
+    "flatbuffers",
+    "steam-audio",
+    "angelscript",
+    {
+      "name": "libgit2",
+      "features": ["openssl", "pcre", "ssl"]
+    },
+    "libplist",
+    "reactphysics3d",
+    "pcre2",
+    "openssl",
+    "zlib"
+  ],
+  "overrides": [
+    {
+      "name": "flatbuffers", 
+      "version": "23.5.26"
+    }
+  ]
+}
