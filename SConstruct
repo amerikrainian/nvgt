@@ -42,7 +42,19 @@ if ARGUMENTS.get("debug", "0") == "1":
 
 # Platform setup and system libraries
 if env["PLATFORM"] == "win32":
-	env.Append(CCFLAGS = ["/EHsc", "/J", "/MT" if not "windev_debug" in env else "/MTd", "/Z7", "/std:c++20", "/GF", "/Zc:inline", "/O2" if ARGUMENTS.get("debug", "0") == "0" else "/Od", "/bigobj", "/permissive-", "/W3" if ARGUMENTS.get("warnings", "0") == "1" else "", "/WX" if ARGUMENTS.get("warnings_as_errors", "0") == "1" else ""])
+	# Use vcpkg libraries if available, otherwise fall back to windev
+	vcpkg_installed = os.path.exists("vcpkg_installed/x64-windows")
+	is_debug = ARGUMENTS.get("debug", "0") == "1"
+	if vcpkg_installed:
+		print("Using vcpkg libraries from vcpkg_installed/x64-windows")
+		if is_debug:
+			env.Append(CPPPATH = ["vcpkg_installed/x64-windows/include"], LIBPATH = ["vcpkg_installed/x64-windows/debug/lib", "vcpkg_installed/x64-windows-dynamic/debug/lib", "vcpkg_installed/x64-windows-dynamic/debug/bin"])
+		else:
+			env.Append(CPPPATH = ["vcpkg_installed/x64-windows/include"], LIBPATH = ["vcpkg_installed/x64-windows/lib", "vcpkg_installed/x64-windows-dynamic/lib", "vcpkg_installed/x64-windows-dynamic/bin"])
+	else:
+		print("Using prebuilt libraries from windev/")
+		env.Append(CPPPATH = ["windev/include"], LIBPATH = ["windev/lib"])
+	env.Append(CCFLAGS = ["/EHsc", "/J", "/MT" if not is_debug and "windev_debug" not in env else "/MTd", "/Z7", "/std:c++20", "/GF", "/Zc:inline", "/O2" if not is_debug else "/Od", "/bigobj", "/permissive-", "/W3" if ARGUMENTS.get("warnings", "0") == "1" else "", "/WX" if ARGUMENTS.get("warnings_as_errors", "0") == "1" else ""])
 	env.Append(LINKFLAGS = ["/NOEXP", "/NOIMPLIB"], no_import_lib = 1)
 	env.Append(LIBS = ["Kernel32", "User32", "imm32", "OneCoreUAP", "dinput8", "dxguid", "gdi32", "winspool", "shell32", "iphlpapi", "ole32", "oleaut32", "delayimp", "uuid", "comdlg32", "advapi32", "netapi32", "winmm", "version", "crypt32", "normaliz", "wldap32", "ws2_32", "ntdll"])
 else:
@@ -99,6 +111,9 @@ if len(static_plugins) > 0:
 if env["PLATFORM"] == "posix" and os.path.exists("vcpkg_installed/x64-linux"):
 	# When using vcpkg, we need to specify libraries in the correct order to resolve dependencies
 	env.Append(LIBS = ["ASAddon", "deps", "angelscript", "SDL3-static" if os.path.exists("vcpkg_installed/x64-linux/lib/libSDL3-static.a") else "SDL3", "phonon", "enet", "reactphysics3d", "PocoJSON", "PocoNet", "PocoNetSSL", "PocoUtil", "PocoXML", "PocoCrypto", "PocoZip", "PocoFoundation", "ssl", "crypto", "utf8proc", "pcre2-8", "vorbisfile", "vorbis", "ogg", "FLAC", "expat", "z", "mysofa", "pffft", "flatbuffers"])
+elif env["PLATFORM"] == "win32" and os.path.exists("vcpkg_installed/x64-windows"):
+	# Windows with vcpkg
+	env.Append(LIBS = ["ASAddon", "deps", "angelscript", "SDL3-static" if os.path.exists("vcpkg_installed/x64-windows/lib/SDL3-static.lib") else "SDL3", "phonon", "enet", "reactphysics3d", "PocoJSONmt", "PocoNetmt", "PocoNetSSLmt", "PocoUtilmt", "PocoXMLmt", "PocoCryptomt", "PocoZipmt", "PocoFoundationmt", "libssl", "libcrypto", "utf8proc", "pcre2-8-static", "vorbisfile", "vorbis", "ogg", "FLAC", "expat", "zlib", "mysofa", "pffft", "flatbuffers"])
 else:
 	env.Append(LIBS = [["PocoJSON", "PocoNet", "PocoNetSSL", "PocoUtil", "PocoXML", "PocoCrypto", "PocoZip", "PocoFoundation", "expat", "z"] if env["PLATFORM"] != "win32" else ["UniversalSpeechStatic", "PocoXMLmt", "libexpatMT", "zlib"], "angelscript", "SDL3", "phonon", "enet", "reactphysics3d", "ssl", "crypto", "utf8proc", "pcre2-8", "ASAddon", "deps", "vorbisfile", "vorbis", "ogg"])
 if env["PLATFORM"] == "posix": env.ParseConfig("pkg-config --libs alsa")

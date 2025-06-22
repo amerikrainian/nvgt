@@ -531,6 +531,281 @@ def build_packages_for_linux() -> None:
     print("Done")
 
 
+def build_packages_for_windows() -> None:
+    if platform.system() != "Windows":
+        sys.exit(
+            "Windows packages may only be built on Windows. Please re-run this script on Windows",
+        )
+
+    print("Building Windows packages, this will take a while...")
+
+    # Check for Visual Studio or Build Tools
+    # This is a basic check - could be enhanced to verify specific versions
+    if not shutil.which("cl.exe") and not shutil.which(
+        "cl", path=os.environ.get("PATH", "")
+    ):
+        print("Warning: MSVC compiler (cl.exe) not found in PATH.")
+        print(
+            "Please ensure Visual Studio or Build Tools for Visual Studio is installed."
+        )
+        print(
+            "You may need to run this script from a Visual Studio Developer Command Prompt."
+        )
+
+    # Packages are defined in vcpkg.json manifest
+    if build_arm64_windows and not use_official_steam_audio:
+        sys.exit(
+            "Error: steam audio does not have official libraries for arm64 for Windows",
+        )
+
+    if build_arm64_windows:
+        try:
+            # Build static libraries first and preserve them
+            print("Building static libraries for ARM64...")
+            command = [vcpkg_path, "install", "--triplet", "arm64-windows"]
+            run(command, check=True)
+
+            # Copy static libraries to a temporary location to preserve them
+            static_backup = Path(orig_cwd / "vcpkg_installed" / "arm64-windows-backup")
+            if Path(orig_cwd / "vcpkg_installed" / "arm64-windows").exists():
+                print("Backing up ARM64 static libraries...")
+                if static_backup.exists():
+                    shutil.rmtree(static_backup)
+                shutil.copytree(
+                    Path(orig_cwd / "vcpkg_installed" / "arm64-windows"), static_backup
+                )
+
+            # Build dynamic libraries
+            print("Building dynamic libraries for ARM64...")
+            command = [vcpkg_path, "install", "--triplet", "arm64-windows-dynamic"]
+            run(command, check=True)
+
+            # Restore static libraries
+            if static_backup.exists():
+                print("Restoring ARM64 static libraries...")
+                if Path(orig_cwd / "vcpkg_installed" / "arm64-windows").exists():
+                    shutil.rmtree(Path(orig_cwd / "vcpkg_installed" / "arm64-windows"))
+                shutil.move(
+                    static_backup, Path(orig_cwd / "vcpkg_installed" / "arm64-windows")
+                )
+        except CalledProcessError as cpe:
+            sys.exit(
+                f"Windows packages installation failed, code {cpe.returncode}",
+            )
+
+    if build_x64_windows:
+        try:
+            # Build static libraries first and preserve them
+            print("Building static libraries...")
+            command = [vcpkg_path, "install", "--triplet", "x64-windows"]
+            run(command, check=True)
+
+            # Copy static libraries to a temporary location to preserve them
+            static_backup = Path(orig_cwd / "vcpkg_installed" / "x64-windows-backup")
+            if Path(orig_cwd / "vcpkg_installed" / "x64-windows").exists():
+                print("Backing up static libraries...")
+                if static_backup.exists():
+                    shutil.rmtree(static_backup)
+                shutil.copytree(
+                    Path(orig_cwd / "vcpkg_installed" / "x64-windows"), static_backup
+                )
+
+            # Build dynamic libraries
+            print("Building dynamic libraries...")
+            command = [vcpkg_path, "install", "--triplet", "x64-windows-dynamic"]
+            run(command, check=True)
+
+            # Restore static libraries
+            if static_backup.exists():
+                print("Restoring static libraries...")
+                if Path(orig_cwd / "vcpkg_installed" / "x64-windows").exists():
+                    shutil.rmtree(Path(orig_cwd / "vcpkg_installed" / "x64-windows"))
+                shutil.move(
+                    static_backup, Path(orig_cwd / "vcpkg_installed" / "x64-windows")
+                )
+        except CalledProcessError as cpe:
+            sys.exit(
+                f"Windows packages installation failed, code {cpe.returncode}",
+            )
+
+    print("Done")
+    print("Generating windev package...")
+
+    if build_arm64_windows:
+        out_dir = Path(orig_cwd / "build" / "packages" / "windev-arm64")
+        out_dir.mkdir(parents=True, exist_ok=True)
+        # Copy static libraries from vcpkg_installed directory (manifest mode)
+        vcpkg_installed_dir = Path(orig_cwd / "vcpkg_installed" / "arm64-windows")
+        if vcpkg_installed_dir.exists():
+            shutil.copytree(
+                vcpkg_installed_dir / "include",
+                out_dir / "include",
+                dirs_exist_ok=True,
+            )
+            shutil.copytree(
+                vcpkg_installed_dir / "lib",
+                out_dir / "lib",
+                dirs_exist_ok=True,
+            )
+            if (vcpkg_installed_dir / "debug").exists():
+                shutil.copytree(
+                    vcpkg_installed_dir / "debug",
+                    out_dir / "debug",
+                    dirs_exist_ok=True,
+                )
+        # Copy dynamic libraries
+        vcpkg_installed_dynamic_dir = Path(
+            orig_cwd / "vcpkg_installed" / "arm64-windows-dynamic"
+        )
+        if vcpkg_installed_dynamic_dir.exists():
+            shutil.copytree(
+                vcpkg_installed_dynamic_dir / "include",
+                out_dir / "include",
+                dirs_exist_ok=True,
+            )
+            shutil.copytree(
+                vcpkg_installed_dynamic_dir / "lib",
+                out_dir / "lib",
+                dirs_exist_ok=True,
+            )
+            if (vcpkg_installed_dynamic_dir / "bin").exists():
+                shutil.copytree(
+                    vcpkg_installed_dynamic_dir / "bin",
+                    out_dir / "bin",
+                    dirs_exist_ok=True,
+                )
+            if (vcpkg_installed_dynamic_dir / "debug").exists():
+                shutil.copytree(
+                    vcpkg_installed_dynamic_dir / "debug",
+                    out_dir / "debug",
+                    dirs_exist_ok=True,
+                )
+
+    if build_x64_windows:
+        out_dir = Path(orig_cwd / "build" / "packages" / "windev-x64")
+        out_dir.mkdir(parents=True, exist_ok=True)
+        # Copy static libraries from vcpkg_installed directory (manifest mode)
+        vcpkg_installed_dir = Path(orig_cwd / "vcpkg_installed" / "x64-windows")
+        if vcpkg_installed_dir.exists():
+            shutil.copytree(
+                vcpkg_installed_dir / "include",
+                out_dir / "include",
+                dirs_exist_ok=True,
+            )
+            shutil.copytree(
+                vcpkg_installed_dir / "lib",
+                out_dir / "lib",
+                dirs_exist_ok=True,
+            )
+            if (vcpkg_installed_dir / "debug").exists():
+                shutil.copytree(
+                    vcpkg_installed_dir / "debug",
+                    out_dir / "debug",
+                    dirs_exist_ok=True,
+                )
+        # Copy dynamic libraries
+        vcpkg_installed_dynamic_dir = Path(
+            orig_cwd / "vcpkg_installed" / "x64-windows-dynamic"
+        )
+        if vcpkg_installed_dynamic_dir.exists():
+            shutil.copytree(
+                vcpkg_installed_dynamic_dir / "include",
+                out_dir / "include",
+                dirs_exist_ok=True,
+            )
+            shutil.copytree(
+                vcpkg_installed_dynamic_dir / "lib",
+                out_dir / "lib",
+                dirs_exist_ok=True,
+            )
+            if (vcpkg_installed_dynamic_dir / "bin").exists():
+                shutil.copytree(
+                    vcpkg_installed_dynamic_dir / "bin",
+                    out_dir / "bin",
+                    dirs_exist_ok=True,
+                )
+            if (vcpkg_installed_dynamic_dir / "debug").exists():
+                shutil.copytree(
+                    vcpkg_installed_dynamic_dir / "debug",
+                    out_dir / "debug",
+                    dirs_exist_ok=True,
+                )
+
+        if use_official_steam_audio:
+            gh = Github()
+            repo = gh.get_repo("ValveSoftware/steam-audio")
+            release = repo.get_latest_release()
+            zip_asset = None
+            # TODO (ethindp): refine this
+            for asset in release.get_assets():
+                if asset.name.startswith("steamaudio_") and asset.name.endswith(".zip"):
+                    zip_asset = asset
+                    break
+            if zip_asset is None:
+                sys.exit("Official steam audio zip asset could not be found")
+            response = requests.get(zip_asset.browser_download_url, timeout=30)
+            response.raise_for_status()
+            zip_data = io.BytesIO(response.content)
+            with zipfile.ZipFile(zip_data) as zf:
+                if build_x64_windows:
+                    out_dir = Path(orig_cwd / "build" / "packages" / "windev-x64")
+                    zf.extract(
+                        "steamaudio/lib/windows-x64/phonon.dll",
+                        path=str((out_dir / "bin").resolve()),
+                    )
+                    zf.extract(
+                        "steamaudio/lib/windows-x64/phonon.lib",
+                        path=str((out_dir / "lib").resolve()),
+                    )
+                    zf.extract(
+                        "steamaudio/include/phonon.h",
+                        path=str((out_dir / "include").resolve()),
+                    )
+                    zf.extract(
+                        "steamaudio/include/phonon_interfaces.h",
+                        path=str((out_dir / "include").resolve()),
+                    )
+                    zf.extract(
+                        "steamaudio/include/phonon_version.h",
+                        path=str((out_dir / "include").resolve()),
+                    )
+
+    if build_arm64_windows:
+        out_dir = Path(orig_cwd / "build" / "packages" / "windev-arm64")
+        shutil.make_archive(
+            "windev-arm64",
+            format="zip",
+            root_dir=out_dir.parent,
+            base_dir="windev-arm64",
+        )
+        with (
+            Path("windev-arm64.zip").open("rb") as f,
+            Path("windev-arm64.zip.blake2b").open("w") as hf,
+        ):
+            h = hashlib.blake2b()
+            data = f.read()
+            h.update(data)
+            hf.write(h.hexdigest())
+
+    if build_x64_windows:
+        out_dir = Path(orig_cwd / "build" / "packages" / "windev-x64")
+        shutil.make_archive(
+            "windev-x64",
+            format="zip",
+            root_dir=out_dir.parent,
+            base_dir="windev-x64",
+        )
+        with (
+            Path("windev-x64.zip").open("rb") as f,
+            Path("windev-x64.zip.blake2b").open("w") as hf,
+        ):
+            h = hashlib.blake2b()
+            data = f.read()
+            h.update(data)
+            hf.write(h.hexdigest())
+    print("Done")
+
+
 if __name__ == "__main__":
     import argparse
 
@@ -626,10 +901,8 @@ if __name__ == "__main__":
     if build_macos:
         print("macOS build not yet implemented")
 
-    if build_arm64_windows:
-        print("ARM64 Windows build not yet implemented")
-
-    if build_x64_windows:
-        print("x64 Windows build not yet implemented")
+    if build_arm64_windows or build_x64_windows:
+        print("Building for Windows...")
+        build_packages_for_windows()
 
     print("Build process completed!")
